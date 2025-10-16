@@ -85,7 +85,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
-        const { useEffect, useMemo, useRef, useState } = React;
+        const { useEffect, useMemo, useRef, useState, useCallback } = React;
 
         // --- Configuration ---
         const ACCENT = "#FF6A3D";
@@ -102,6 +102,8 @@
         const SparkleIcon = ({ className }) => <Icon className={className}><path d="M10 3L8 8L3 10L8 12L10 17L12 12L17 10L12 8L10 3z"/></Icon>;
         const ChevronRight = ({ className }) => <Icon className={className}><path d="m9 18 6-6-6-6"/></Icon>
         const BrainCircuit = ({ className }) => <Icon className={className}><path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-1.99 1.03-2.69a3.6 3.6 0 0 1 .1-2.64s.84-.27 2.75 1.02a9.58 9.58 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.4.1 2.64.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.73c0 .27.16.59.67.5A10 10 0 0 0 22 12 10 10 0 0 0 12 2Z"/></Icon>;
+        const LogOut = ({className}) => <Icon className={className}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></Icon>;
+        const SettingsIcon = ({className}) => <Icon className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>;
 
         // --- Gemini API Call Function ---
         async function callGeminiApi(prompt) {
@@ -190,21 +192,105 @@
             );
         }
 
-        function TopNav({ onJump }) {
+        function TopNav({ onJump, onLogout, userEmail, setView }) {
             const [open, setOpen] = useState(false);
-            const items = [ { id: "overview", label: "Overview" }, { id: "ai-analysis", label: "AI Analysis" }, {id: "decision-engine", label: "Decision Engine"}, { id: "structure", label: "Structure" }, { id: "creative-lab", label: "Creative Lab" }, {id: "daba-sets", label: "DABA Sets"}, { id: "asc", label: "ASC Scale" }, { id: "timeline", label: "Timeline" }, { id: "kpi", label: "KPI & Rules" } ];
+            const items = [ { id: "overview", label: "Overview" }, { id: "decision-engine", label: "Decision Engine"}, { id: "creative-lab", label: "Creative Lab" }, {id: "daba-sets", label: "DABA Sets"}, { id: "asc", label: "ASC Scale" }];
+            
+            const handleJump = (id) => {
+                setView('dashboard');
+                setTimeout(() => onJump(id), 0);
+            }
+
             return (
                 <header className="sticky top-0 z-40 border-b border-white/10 backdrop-blur-xl bg-black/30">
                     <div className="max-w-7xl mx-auto px-3 md:px-4 py-2.5 flex items-center justify-between">
                         <div className="flex items-center gap-3"><Logo /></div>
-                        <nav className="hidden md:flex gap-4 text-sm text-white/80">{items.map((i) => (<button key={i.id} onClick={() => onJump(i.id)} className="hover:text-white">{i.label}</button>))}</nav>
+                        <nav className="hidden md:flex items-center gap-4 text-sm text-white/80">
+                            {items.map((i) => (<button key={i.id} onClick={() => handleJump(i.id)} className="hover:text-white">{i.label}</button>))}
+                            <div className="w-px h-5 bg-white/10 mx-2"></div>
+                            <button onClick={() => setView('settings')} className="flex items-center gap-2 hover:text-white" title="Settings"><SettingsIcon className="w-4 h-4" /></button>
+                            <span className="text-xs text-white/60 hidden lg:inline">{userEmail}</span>
+                            <button onClick={onLogout} className="flex items-center gap-2 hover:text-white" title="Logout"><LogOut className="w-4 h-4" /></button>
+                        </nav>
                         <button className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10" onClick={() => setOpen(!open)} aria-label="Toggle menu">{open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
                     </div>
-                    {open && (<div className="md:hidden border-t border-white/10 bg-black/60 backdrop-blur-xl"><div className="max-w-7xl mx-auto px-3 py-2 grid grid-cols-2 gap-2">{items.map((i) => (<button key={i.id} onClick={() => { setOpen(false); onJump(i.id); }} className="text-left px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 text-sm">{i.label}</button>))}</div></div>)}
+                    {open && (<div className="md:hidden border-t border-white/10 bg-black/60 backdrop-blur-xl">
+                        <div className="max-w-7xl mx-auto px-3 py-2 grid grid-cols-2 gap-2">
+                            {items.map((i) => (<button key={i.id} onClick={() => { setOpen(false); handleJump(i.id); }} className="text-left px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 text-sm">{i.label}</button>))}
+                        </div>
+                        <div className="border-t border-white/10 px-3 py-2">
+                             <button onClick={() => { setOpen(false); setView('settings'); }} className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 text-sm"><SettingsIcon className="w-4 h-4"/> Settings</button>
+                        </div>
+                        <div className="border-t border-white/10 px-3 py-3">
+                             <button onClick={onLogout} className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-sm text-rose-300"><LogOut className="w-4 h-4"/> Logout</button>
+                        </div>
+                    </div>)}
                 </header>
             );
         }
         
+        function AuthScreen({ onLogin, onSignup }) {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!email || !password) {
+                    setError('Email and password are required.');
+                    return;
+                }
+                setError('');
+                if (isLogin) {
+                    onLogin(email, password, setError);
+                } else {
+                    onSignup(email, password, setError);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center text-white p-4">
+                    <div className="w-full max-w-sm">
+                        <div className="text-center mb-8"><Logo /></div>
+                        <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-8">
+                            <h2 className="text-2xl font-bold text-center mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+                            <p className="text-center text-white/60 text-sm mb-6">{isLogin ? 'Sign in to continue' : 'Start your journey with us'}</p>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-white/70">Email</label>
+                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="mt-1 w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-amber-500 outline-none" placeholder="you@example.com" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-white/70">Password</label>
+                                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-amber-500 outline-none" placeholder="••••••••" />
+                                </div>
+                                {error && <p className="text-xs text-rose-400">{error}</p>}
+                                <button type="submit" className="w-full font-semibold py-2.5 rounded-lg shadow-lg hover:opacity-95" style={{ background: ACCENT, color: BG }}>
+                                    {isLogin ? 'Login' : 'Sign Up'}
+                                </button>
+                            </form>
+                            <p className="text-center text-xs text-white/60 mt-6">
+                                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                                <button onClick={() => setIsLogin(!isLogin)} className="font-semibold text-amber-400 hover:text-amber-300 ml-1">
+                                    {isLogin ? 'Sign Up' : 'Login'}
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const ResponsiveDataRow = ({ label, children }) => (
+            <div className="flex justify-between items-center border-b border-white/10 py-2">
+                <span className="text-white/70 text-xs">{label}</span>
+                <span>{children}</span>
+            </div>
+        );
+        
+        // --- Dashboard Components ---
+
         function Overview({ kpi }) {
             return (
                 <Section id="overview" title="Overview" icon={<Rocket className="w-4 h-4" color={ACCENT} />}>
@@ -230,9 +316,9 @@
                 </Section>
             );
         }
-
+        
         function DecisionEngine({ ads, sets, kpi, setAds, setSets, handleExplainDecisions }) {
-            const decisions = useMemo(() => {
+             const decisions = useMemo(() => {
                 const combined = [
                     ...ads.map(ad => ({ ...ad, type: 'ad' })),
                     ...sets.map(set => ({ ...set, type: 'set' }))
@@ -241,27 +327,10 @@
                 return combined.map(item => {
                     const cpa = item.purchases > 0 ? item.spend / item.purchases : Infinity;
                     const roas = item.spend > 0 ? (item.purchases * kpi.aov) / item.spend : 0;
-
-                    let decision = "Hold steady";
-                    let tone = "warn";
-                    let colorClass = "bg-amber-500/10 border-amber-500/20";
-
-                    if (cpa <= kpi.cpa && roas >= 5) {
-                        decision = "Scale +20% Budget";
-                        tone = "ok";
-                        colorClass = "bg-emerald-500/10 border-emerald-500/20";
-                    } else if (cpa > 65 || (item.spend > 0 && roas < 4)) {
-                        decision = "Pause Creative";
-                        tone = "bad";
-                        colorClass = "bg-rose-500/10 border-rose-500/20";
-                    }
-                    
-                    if (item.spend === 0) {
-                         decision = "Awaiting data";
-                         tone = "neutral";
-                         colorClass = "bg-white/5 border-white/10";
-                    }
-
+                    let decision = "Hold steady"; let tone = "warn"; let colorClass = "bg-amber-500/10 border-amber-500/20";
+                    if (cpa <= kpi.cpa && roas >= 5) { decision = "Scale +20% Budget"; tone = "ok"; colorClass = "bg-emerald-500/10 border-emerald-500/20"; } 
+                    else if (cpa > 65 || (item.spend > 0 && roas < 4)) { decision = "Pause Creative"; tone = "bad"; colorClass = "bg-rose-500/10 border-rose-500/20"; }
+                    if (item.spend === 0) { decision = "Awaiting data"; tone = "neutral"; colorClass = "bg-white/5 border-white/10"; }
                     return { ...item, cpa, roas, decision, tone, colorClass };
                 });
             }, [ads, sets, kpi]);
@@ -270,16 +339,12 @@
                 const toScale = decisions.filter(d => d.tone === 'ok').map(d => d.name);
                 const toPause = decisions.filter(d => d.tone === 'bad').map(d => d.name);
                 const toHold = decisions.filter(d => d.tone === 'warn').map(d => d.name);
-
                 let recommendations = [];
-                if (toScale.length > 0) recommendations.push(`• Scale the following items immediately: ${toScale.join(', ')}.`);
-                if (toPause.length > 0) recommendations.push(`• Consider pausing these underperforming items: ${toPause.join(', ')}.`);
-                if (toHold.length > 0) recommendations.push(`• Continue monitoring these items closely: ${toHold.join(', ')}.`);
-                if (recommendations.length === 0 && decisions.some(d => d.spend > 0)) return "All items are performing within the 'Hold' threshold. Continue monitoring.";
-                if (recommendations.length === 0) return "Not enough data to generate recommendations. Please input spend and purchase data.";
-                
+                if (toScale.length > 0) recommendations.push(`• Scale immediately: ${toScale.join(', ')}.`);
+                if (toPause.length > 0) recommendations.push(`• Consider pausing: ${toPause.join(', ')}.`);
+                if (toHold.length > 0) recommendations.push(`• Monitor closely: ${toHold.join(', ')}.`);
+                if (recommendations.length === 0) return "Not enough data for recommendations. Please input spend and purchase data.";
                 return recommendations.join('\n');
-
             }, [decisions]);
             
             const applyDecisions = () => {
@@ -317,66 +382,34 @@
             return (
                 <Section id="decision-engine" title="Decision Engine" icon={<BrainCircuit className="w-4 h-4" color={ACCENT} />} actions={
                     <div className="flex items-center gap-2">
-                        <button onClick={() => handleExplainDecisions(decisions)} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 font-semibold flex items-center gap-2 mx-auto disabled:opacity-50 text-xs text-white/80">
-                            <SparkleIcon className="w-4 h-4"/> Explain (AI)
-                        </button>
-                        <button onClick={applyDecisions} className="px-4 py-2 rounded-lg font-semibold shadow-lg hover:opacity-95 flex items-center gap-2 mx-auto disabled:opacity-50 text-xs" style={{ background: ACCENT, color: "#0B0F14" }}>Apply Decisions</button>
+                        <button onClick={() => handleExplainDecisions(decisions)} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 font-semibold flex items-center gap-2 text-xs text-white/80"><SparkleIcon className="w-4 h-4"/> Explain (AI)</button>
+                        <button onClick={applyDecisions} className="px-4 py-2 rounded-lg font-semibold shadow-lg hover:opacity-95 flex items-center gap-2 text-xs" style={{ background: ACCENT, color: "#0B0F14" }}>Apply Decisions</button>
                     </div>
                 }>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div className="lg:col-span-2 space-y-3 md:space-y-0">
-                            {/* Desktop Table */}
+                        <div className="lg:col-span-2">
+                             {/* Desktop Table */}
                             <table className="w-full text-sm hidden md:table">
-                               <thead className="text-left text-white/60">
-                                    <tr>
-                                        <th className="px-3 py-2">Item Name</th>
-                                        <th className="px-3 py-2">CPA</th>
-                                        <th className="px-3 py-2">ROAS</th>
-                                        <th className="px-3 py-2">Recommendation</th>
-                                    </tr>
-                                </thead>
+                               <thead className="text-left text-white/60"><tr><th className="px-3 py-2">Item Name</th><th className="px-3 py-2">CPA</th><th className="px-3 py-2">ROAS</th><th className="px-3 py-2">Recommendation</th></tr></thead>
                                 <tbody>
-                                    {decisions.map(d => (
-                                        <tr key={`${d.type}-${d.id}`} className={`${d.colorClass.split(' ')[0]} border-b border-white/10`}>
-                                            <td className="px-3 py-2.5 font-semibold">{d.name}</td>
-                                            <td className="px-3 py-2.5">{isFinite(d.cpa) ? d.cpa.toFixed(2) : '-'} RON</td>
-                                            <td className="px-3 py-2.5">{d.roas.toFixed(2)}</td>
-                                            <td className="px-3 py-2.5"><Pill tone={d.tone}>{d.decision}</Pill></td>
-                                        </tr>
-                                    ))}
+                                    {decisions.map(d => (<tr key={`${d.type}-${d.id}`} className={`${d.colorClass.split(' ')[0]} border-b border-white/10`}><td className="px-3 py-2.5 font-semibold">{d.name}</td><td className="px-3 py-2.5">{isFinite(d.cpa) ? d.cpa.toFixed(2) : '-'} RON</td><td className="px-3 py-2.5">{d.roas.toFixed(2)}</td><td className="px-3 py-2.5"><Pill tone={d.tone}>{d.decision}</Pill></td></tr>))}
                                 </tbody>
                             </table>
                              {/* Mobile Cards */}
                             <div className="md:hidden space-y-3">
-                                {decisions.map(d => (
-                                    <div key={`${d.type}-${d.id}`} className={`p-3 rounded-lg border ${d.colorClass}`}>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <h4 className="font-semibold">{d.name}</h4>
-                                            <Pill tone={d.tone}>{d.decision}</Pill>
-                                        </div>
-                                        <div className="flex justify-between text-xs text-white/80">
-                                            <span>CPA: <b>{isFinite(d.cpa) ? d.cpa.toFixed(2) : '-'} RON</b></span>
-                                            <span>ROAS: <b>{d.roas.toFixed(2)}</b></span>
-                                        </div>
-                                    </div>
-                                ))}
+                                {decisions.map(d => (<div key={`${d.type}-${d.id}`} className={`p-3 rounded-lg border ${d.colorClass}`}><div className="flex justify-between items-center mb-2"><h4 className="font-semibold">{d.name}</h4><Pill tone={d.tone}>{d.decision}</Pill></div><div className="flex justify-between text-xs text-white/80"><span>CPA: <b>{isFinite(d.cpa) ? d.cpa.toFixed(2) : '-'} RON</b></span><span>ROAS: <b>{d.roas.toFixed(2)}</b></span></div></div>))}
                             </div>
                         </div>
-                        <div className="lg:col-span-1 rounded-lg border border-white/10 p-3 bg-black/20">
-                            <h4 className="font-semibold mb-2">Summary & Recommendations</h4>
-                            <p className="text-white/80 whitespace-pre-wrap text-xs">{summary}</p>
-                        </div>
+                        <div className="lg:col-span-1 rounded-lg border border-white/10 p-3 bg-black/20"><h4 className="font-semibold mb-2">Summary & Recommendations</h4><p className="text-white/80 whitespace-pre-wrap text-xs">{summary}</p></div>
                     </div>
                 </Section>
             );
         }
 
-        function Structure() {
-             const structureData = [
+        function Structure() { 
+            const structureData = [
                 { name: "TEST – CBO – Creative Lab", objective: "Sales", budget: "400 RON", goal: "Find winning creatives", adSets: [ { name: "Office Elegance", targeting: "Broad, Women 25-55", ads: [{type: "Video & Image", copy: "Step into confidence. Leather boots that elevate every office outfit."}] }, { name: "Street Comfort", targeting: "Broad, Women 25-55", ads: [{type: "Video & Image", copy: "Walk your city in comfort. Soft leather, everyday confidence."}] } ] },
                 { name: "PRO – ASC – Main Scaler", objective: "Sales", budget: "700 RON", goal: "Scale winners", adSets: [ { name: "Broad Scaling Ad Set", targeting: "Broad, Women 25-55, Romania", ads: [{type: "Post ID", copy: "Winner 1 from CBO"}, {type: "Post ID", copy: "Winner 2 from CBO"}] } ] },
-                { name: "PRO – DABA – Catalog All", objective: "Sales", budget: "400 RON", goal: "Consistent volume", adSets: [ { name: "Full Catalog", targeting: "Broad, Women 25-55, Romania", ads: [{type: "Dynamic Product Ad", copy: "Showcasing all products to a broad audience."}] } ] },
-                { name: "RET – DPA – ATC/VC 3d", objective: "Sales", budget: "150 RON", goal: "Recover intent", adSets: [ { name: "ATC/VC 3 days", targeting: "Users who Added to Cart or Viewed Content in last 3 days", ads: [{type: "Dynamic Product Ad", copy: "Still thinking about them?"}] } ] },
             ];
             
             return (
@@ -411,16 +444,7 @@
                 </Section>
             );
         }
-        
-        const ResponsiveDataRow = ({ label, children }) => (
-            <div className="flex justify-between items-center border-b border-white/10 py-2">
-                <span className="text-white/70 text-xs">{label}</span>
-                <span>{children}</span>
-            </div>
-        );
-
         function CreativeLab({ kpi, addWinner, ads, setAds, handleAIAssist }) {
-            // ... (functions remain the same)
             const update = (i, key, val) => { const next = [...ads]; next[i][key] = val; setAds(next); };
             const statusOf = (ad) => {
                 const cpa = ad.purchases > 0 ? ad.spend / ad.purchases : Infinity;
@@ -441,70 +465,77 @@
 
             return (
                 <Section id="creative-lab" title="TEST – CBO – Creative Lab" icon={<ListChecks className="w-4 h-4" color={ACCENT} />}>
-                    {/* Desktop Table */}
-                    <table className="w-full text-sm hidden md:table">
-                       <thead className="text-left text-white/60">
-                            <tr>
-                                <th className="px-2 py-1">Ad Set</th><th className="px-2 py-1">Budget (RON)</th><th className="px-2 py-1">Spend (RON)</th><th className="px-2 py-1">Purchases</th>
-                                <th className="px-2 py-1">CPA</th><th className="px-2 py-1">ROAS</th><th className="px-2 py-1">Status</th><th className="px-2 py-1">Action</th>
-                                <th className="px-2 py-1 text-center">✨ AI Creative Assistant</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <div className="overflow-x-auto text-sm">
+                        {/* Desktop Table */}
+                        <table className="w-full text-sm hidden md:table">
+                           <thead className="text-left text-white/60">
+                                <tr>
+                                    <th className="px-2 py-1">Ad Set</th><th className="px-2 py-1">Budget (RON)</th><th className="px-2 py-1">Spend (RON)</th><th className="px-2 py-1">Purchases</th>
+                                    <th className="px-2 py-1">CPA</th><th className="px-2 py-1">ROAS</th><th className="px-2 py-1">Status</th><th className="px-2 py-1">Action</th>
+                                    <th className="px-2 py-1 text-center">✨ AI Creative Assistant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {ads.map((a, i) => {
+                                    const s = statusOf(a);
+                                    const cpa = a.purchases > 0 ? (a.spend / a.purchases).toFixed(2) : "-";
+                                    const roas = a.spend > 0 ? ((a.purchases * kpi.aov) / a.spend).toFixed(2) : "-";
+                                    return (
+                                        <tr key={a.id} className="bg-white/5 border-b border-white/10 align-middle">
+                                            <td className="px-2 py-1.5 font-semibold">{a.name}</td>
+                                            <td className="px-2 py-1.5"><input type="number" min={0} className="w-20 bg-transparent border border-white/10 px-2 py-1 rounded" value={a.budget} onChange={(e) => update(i, "budget", parseFloat(e.target.value || "0"))} /></td>
+                                            <td className="px-2 py-1.5"><input type="number" min={0} className="w-20 bg-transparent border border-white/10 px-2 py-1 rounded" value={a.spend} onChange={(e) => update(i, "spend", parseFloat(e.target.value || "0"))} /></td>
+                                            <td className="px-2 py-1.5"><input type="number" min={0} className="w-20 bg-transparent border border-white/10 px-2 py-1 rounded" value={a.purchases} onChange={(e) => update(i, "purchases", parseInt(e.target.value || "0"))} /></td>
+                                            <td className="px-2 py-1.5">{cpa}</td><td className="px-2 py-1.5">{roas}</td><td className="px-2 py-1.5"><Pill tone={s.tone}>{s.label}</Pill></td>
+                                            <td className="px-2 py-1.5"><button onClick={() => promote(a)} disabled={s.label !== 'READY'} className="px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-40" style={{ background: ACCENT, color: BG }}>Promote → ASC</button></td>
+                                            <td className="px-2 py-1.5">
+                                                <div className="flex justify-center items-center gap-1.5">
+                                                    <button onClick={() => handleAIAssist('copy', a.name)} title="Generate Ad Copy" className="p-1.5 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Copy</button>
+                                                    <button onClick={() => handleAIAssist('headlines', a.name)} title="Generate Headlines" className="p-1.5 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Headlines</button>
+                                                    <button onClick={() => handleAIAssist('visuals', a.name)} title="Generate Visual Ideas" className="p-1.5 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Visuals</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                        {/* Mobile Cards */}
+                        <div className="md:hidden space-y-4">
                             {ads.map((a, i) => {
-                                const s = statusOf(a);
-                                const cpa = a.purchases > 0 ? (a.spend / a.purchases).toFixed(2) : "-";
-                                const roas = a.spend > 0 ? ((a.purchases * kpi.aov) / a.spend).toFixed(2) : "-";
+                                 const s = statusOf(a);
+                                 const cpa = a.purchases > 0 ? (a.spend / a.purchases).toFixed(2) : "-";
+                                 const roas = a.spend > 0 ? ((a.purchases * kpi.aov) / a.spend).toFixed(2) : "-";
                                 return (
-                                    <tr key={a.id} className="bg-white/5 border-b border-white/10 align-middle">
-                                        <td className="px-2 py-1.5 font-semibold">{a.name}</td>
-                                        <td className="px-2 py-1.5"><input type="number" min={0} className="w-20 bg-transparent border border-white/10 px-2 py-1 rounded" value={a.budget} onChange={(e) => update(i, "budget", parseFloat(e.target.value || "0"))} /></td>
-                                        <td className="px-2 py-1.5"><input type="number" min={0} className="w-20 bg-transparent border border-white/10 px-2 py-1 rounded" value={a.spend} onChange={(e) => update(i, "spend", parseFloat(e.target.value || "0"))} /></td>
-                                        <td className="px-2 py-1.5"><input type="number" min={0} className="w-20 bg-transparent border border-white/10 px-2 py-1 rounded" value={a.purchases} onChange={(e) => update(i, "purchases", parseInt(e.target.value || "0"))} /></td>
-                                        <td className="px-2 py-1.5">{cpa}</td><td className="px-2 py-1.5">{roas}</td><td className="px-2 py-1.5"><Pill tone={s.tone}>{s.label}</Pill></td>
-                                        <td className="px-2 py-1.5"><button onClick={() => promote(a)} disabled={s.label !== 'READY'} className="px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-40" style={{ background: ACCENT, color: BG }}>Promote → ASC</button></td>
-                                        <td className="px-2 py-1.5"><div className="flex justify-center items-center gap-1.5">{/* AI buttons */}</div></td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                    {/* Mobile Cards */}
-                    <div className="md:hidden space-y-4">
-                        {ads.map((a, i) => {
-                             const s = statusOf(a);
-                             const cpa = a.purchases > 0 ? (a.spend / a.purchases).toFixed(2) : "-";
-                             const roas = a.spend > 0 ? ((a.purchases * kpi.aov) / a.spend).toFixed(2) : "-";
-                            return (
-                                <div key={a.id} className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-3">
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="font-semibold text-base mr-2">{a.name}</h3>
-                                        <Pill tone={s.tone}>{s.label}</Pill>
-                                    </div>
-                                    <div className="text-sm">
-                                        <ResponsiveDataRow label="Budget"><input type="number" min={0} className="w-24 text-right bg-transparent border border-white/10 px-2 py-1 rounded" value={a.budget} onChange={(e) => update(i, "budget", parseFloat(e.target.value || "0"))} /></ResponsiveDataRow>
-                                        <ResponsiveDataRow label="Spend"><input type="number" min={0} className="w-24 text-right bg-transparent border border-white/10 px-2 py-1 rounded" value={a.spend} onChange={(e) => update(i, "spend", parseFloat(e.target.value || "0"))} /></ResponsiveDataRow>
-                                        <ResponsiveDataRow label="Purchases"><input type="number" min={0} className="w-24 text-right bg-transparent border border-white/10 px-2 py-1 rounded" value={a.purchases} onChange={(e) => update(i, "purchases", parseInt(e.target.value || "0"))} /></ResponsiveDataRow>
-                                        <ResponsiveDataRow label="CPA"><span className="font-semibold">{cpa} RON</span></ResponsiveDataRow>
-                                        <ResponsiveDataRow label="ROAS"><span className="font-semibold">{roas}</span></ResponsiveDataRow>
-                                    </div>
-                                     <div className="border-t border-white/10 pt-3 flex flex-col sm:flex-row gap-2">
-                                        <button onClick={() => promote(a)} disabled={s.label !== 'READY'} className="flex-1 px-3 py-2 rounded-md text-xs font-semibold disabled:opacity-40" style={{ background: ACCENT, color: BG }}>Promote to ASC</button>
-                                        <div className="flex-1 flex justify-center items-center gap-1.5">
-                                            <button onClick={() => handleAIAssist('copy', a.name)} title="Generate Ad Copy" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Copy</button>
-                                            <button onClick={() => handleAIAssist('headlines', a.name)} title="Generate Headlines" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Headlines</button>
-                                            <button onClick={() => handleAIAssist('visuals', a.name)} title="Generate Visual Ideas" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Visuals</button>
+                                    <div key={a.id} className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="font-semibold text-base mr-2">{a.name}</h3>
+                                            <Pill tone={s.tone}>{s.label}</Pill>
+                                        </div>
+                                        <div className="text-sm">
+                                            <ResponsiveDataRow label="Budget"><input type="number" min={0} className="w-24 text-right bg-transparent border border-white/10 px-2 py-1 rounded" value={a.budget} onChange={(e) => update(i, "budget", parseFloat(e.target.value || "0"))} /></ResponsiveDataRow>
+                                            <ResponsiveDataRow label="Spend"><input type="number" min={0} className="w-24 text-right bg-transparent border border-white/10 px-2 py-1 rounded" value={a.spend} onChange={(e) => update(i, "spend", parseFloat(e.target.value || "0"))} /></ResponsiveDataRow>
+                                            <ResponsiveDataRow label="Purchases"><input type="number" min={0} className="w-24 text-right bg-transparent border border-white/10 px-2 py-1 rounded" value={a.purchases} onChange={(e) => update(i, "purchases", parseInt(e.target.value || "0"))} /></ResponsiveDataRow>
+                                            <ResponsiveDataRow label="CPA"><span className="font-semibold">{cpa} RON</span></ResponsiveDataRow>
+                                            <ResponsiveDataRow label="ROAS"><span className="font-semibold">{roas}</span></ResponsiveDataRow>
+                                        </div>
+                                         <div className="border-t border-white/10 pt-3 flex flex-col sm:flex-row gap-2">
+                                            <button onClick={() => promote(a)} disabled={s.label !== 'READY'} className="flex-1 px-3 py-2 rounded-md text-xs font-semibold disabled:opacity-40" style={{ background: ACCENT, color: BG }}>Promote to ASC</button>
+                                            <div className="flex-1 flex justify-center items-center gap-1.5">
+                                                <button onClick={() => handleAIAssist('copy', a.name)} title="Generate Ad Copy" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Copy</button>
+                                                <button onClick={() => handleAIAssist('headlines', a.name)} title="Generate Headlines" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Headlines</button>
+                                                <button onClick={() => handleAIAssist('visuals', a.name)} title="Generate Visual Ideas" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Visuals</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )
-                        })}
+                                )
+                            })}
+                        </div>
                     </div>
                 </Section>
             );
         }
-        
-        function DabaSets({ sets, setSets, kpi }) {
+        function DabaSets({ sets, setSets, kpi, handleAIAssist }) {
              const update = (i, key, val) => { const next = [...sets]; next[i][key] = val; setSets(next); };
             return (
                 <Section id="daba-sets" title="TEST – DABA – Catalog Sets" icon={<ListChecks className="w-4 h-4" color={ACCENT} />}>
@@ -513,7 +544,7 @@
                        <thead className="text-left text-white/60">
                             <tr>
                                 <th className="px-2 py-1">Catalog Set</th><th className="px-2 py-1">Budget (RON)</th><th className="px-2 py-1">Spend (RON)</th><th className="px-2 py-1">Purchases</th>
-                                <th className="px-2 py-1">CPA</th><th className="px-2 py-1">ROAS</th>
+                                <th className="px-2 py-1">CPA</th><th className="px-2 py-1">ROAS</th><th className="px-2 py-1 text-center">✨ AI Creative Assistant</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -527,6 +558,13 @@
                                         <td className="px-2 py-1.5"><input type="number" min={0} className="w-24 bg-transparent border border-white/10 px-2 py-1 rounded" value={s.spend} onChange={(e) => update(i, "spend", parseFloat(e.target.value || "0"))} /></td>
                                         <td className="px-2 py-1.5"><input type="number" min={0} className="w-24 bg-transparent border border-white/10 px-2 py-1 rounded" value={s.purchases} onChange={(e) => update(i, "purchases", parseInt(e.target.value || "0"))} /></td>
                                         <td className="px-2 py-1.5">{cpa}</td><td className="px-2 py-1.5">{roas}</td>
+                                        <td className="px-2 py-1.5">
+                                            <div className="flex justify-center items-center gap-1.5">
+                                                <button onClick={() => handleAIAssist('copy', s.name)} title="Generate Ad Copy" className="p-1.5 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Copy</button>
+                                                <button onClick={() => handleAIAssist('headlines', s.name)} title="Generate Headlines" className="p-1.5 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Headlines</button>
+                                                <button onClick={() => handleAIAssist('visuals', s.name)} title="Generate Visual Ideas" className="p-1.5 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Visuals</button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 );
                             })}
@@ -547,6 +585,14 @@
                                         <ResponsiveDataRow label="CPA"><span className="font-semibold">{cpa} RON</span></ResponsiveDataRow>
                                         <ResponsiveDataRow label="ROAS"><span className="font-semibold">{roas}</span></ResponsiveDataRow>
                                     </div>
+                                    <div className="border-t border-white/10 pt-3">
+                                        <h4 className="text-xs font-semibold text-white/70 mb-2 text-center">AI Creative Assistant</h4>
+                                        <div className="flex justify-center items-center gap-1.5">
+                                            <button onClick={() => handleAIAssist('copy', s.name)} title="Generate Ad Copy" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Copy</button>
+                                            <button onClick={() => handleAIAssist('headlines', s.name)} title="Generate Headlines" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Headlines</button>
+                                            <button onClick={() => handleAIAssist('visuals', s.name)} title="Generate Visual Ideas" className="flex-1 p-2 rounded-md text-xs font-semibold" style={{ background: 'rgba(255,106,61,0.2)', border: '1px solid rgba(255,106,61,0.4)', color: '#FF915E' }}>Visuals</button>
+                                        </div>
+                                    </div>
                                 </div>
                             )
                         })}
@@ -554,20 +600,17 @@
                 </Section>
             );
         }
-
         function ASCScale({ winners }) {
             return (
                 <Section id="asc" title="PRO – ASC – Main Scaler" icon={<Rocket className="w-4 h-4" color={ACCENT} />}>
                     {winners.length === 0 ? (<p className="text-center text-white/60 text-sm">No winners promoted. Promote ads from the Creative Lab!</p>) : (
-                         <div className="space-y-3 md:space-y-0">
-                             {/* Desktop Table */}
+                         <div className="overflow-x-auto text-sm">
                             <table className="w-full text-sm hidden md:table">
                                 <thead className="text-left text-white/60">
                                     <tr><th className="px-3 py-2">Ad (from Test)</th><th className="px-3 py-2">Initial CPA</th><th className="px-3 py-2">Initial ROAS</th><th className="px-3 py-2">Status</th></tr>
                                 </thead>
                                 <tbody>{winners.map((w, idx) => (<tr key={idx} className="bg-white/5 border-b border-white/10"><td className="px-3 py-2.5 font-semibold">{w.name}</td><td className="px-3 py-2.5">{w.cpa} RON</td><td className="px-3 py-2.5">{w.roas}</td><td className="px-3 py-2.5"><Pill tone="ok">Ready to Scale</Pill></td></tr>))}</tbody>
                             </table>
-                            {/* Mobile Cards */}
                             <div className="md:hidden space-y-3">
                                 {winners.map((w, idx) => (
                                     <div key={idx} className="bg-white/5 border border-white/10 rounded-lg p-3">
@@ -587,14 +630,10 @@
                 </Section>
             );
         }
-        
         function Timeline() {
             const steps = [
                 { day: "1–2", focus: "Launch", actions: "Publish TEST CBO + DABA + RET. Verify Pixel/CAPI." },
                 { day: "3–5", focus: "Collect", actions: "Monitor CTR/CPM/purchases. Kill 0‑sale ads with spend > 70 RON." },
-                { day: "6–8", focus: "Promote", actions: "Move winners (CPA≤60, ROAS≥5) to ASC. Keep Post IDs." },
-                { day: "9–11", focus: "Optimize", actions: "+20% budgets on ASC/DABA if stable. Keep TEST flat." },
-                { day: "12–14", focus: "Decide", actions: "Move more winners or retest angles in CBO." },
             ];
             return (
                 <Section id="timeline" title="Timeline — Day 1–14" icon={<Calendar className="w-4 h-4" color={ACCENT} />}>
@@ -609,7 +648,7 @@
                             </div>
                         ))}
                     </div>
-                    <table className="w-full text-sm hidden md:table">
+                     <table className="w-full text-sm hidden md:table">
                        <thead className="text-left text-white/60">
                             <tr>
                                 <th className="px-3 py-2">Day</th><th className="px-3 py-2">Focus</th><th className="px-3 py-2">Actions</th>
@@ -628,8 +667,7 @@
                 </Section>
             );
         }
-
-        function KpiRules({ kpi, setKpi }) {
+        function KpiRules({ kpi, setKpi }) { 
             return (
                 <Section id="kpi" title="KPI Targets & Decision Rules" icon={<BarChart3 className="w-4 h-4" color={ACCENT} />}>
                     <div className="grid md:grid-cols-2 gap-4 text-sm">
@@ -650,55 +688,90 @@
                     </div>
                 </Section>
             );
+         }
+         
+        function SettingsPage({ namingScheme, setNamingScheme, setView }) {
+            const [scheme, setScheme] = useState(namingScheme);
+
+            const handleSave = () => {
+                setNamingScheme(scheme);
+                alert("Naming scheme saved successfully!");
+                setView('dashboard');
+            };
+
+            return (
+                 <main className="max-w-7xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-8">
+                     <Section id="settings" title="Campaign Naming Scheme" icon={<SettingsIcon className="w-4 h-4" color={ACCENT}/>}>
+                         <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">Define Prefixes</h3>
+                                <p className="text-sm text-white/60 mb-4">Set the unique prefixes for your campaign names. The AI and dashboard will use these to automatically identify and categorize your campaigns.</p>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-semibold text-white/70">Testing / Creative Lab Prefix</label>
+                                        <input type="text" value={scheme.test} onChange={e => setScheme(s => ({...s, test: e.target.value}))} className="mt-1 w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-amber-500 outline-none" placeholder="e.g., TEST_"/>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-white/70">Production / Scaling Prefix</label>
+                                        <input type="text" value={scheme.prod} onChange={e => setScheme(s => ({...s, prod: e.target.value}))} className="mt-1 w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-amber-500 outline-none" placeholder="e.g., PROD_"/>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-white/70">Retargeting Prefix</label>
+                                        <input type="text" value={scheme.ret} onChange={e => setScheme(s => ({...s, ret: e.target.value}))} className="mt-1 w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-amber-500 outline-none" placeholder="e.g., RET_"/>
+                                    </div>
+                                </div>
+                            </div>
+                             <div className="rounded-lg border border-amber-500/20 p-4 bg-amber-500/10 text-amber-300 text-sm">
+                                <h4 className="font-bold mb-2">How it works:</h4>
+                                <p className="text-xs leading-5">The system will scan your campaign names. For example, if you set the Testing Prefix to "TEST", any campaign named "TEST | CBO | Creative Lab" will be automatically categorized as a testing campaign by the Decision Engine and AI Assistant.</p>
+                                <p className="text-xs leading-5 mt-3"><strong>Example:</strong> A campaign named `PROD_ASC_Scaler` will be identified as a 'Production' campaign.</p>
+                             </div>
+                         </div>
+                         <div className="border-t border-white/10 mt-6 pt-4 flex justify-end gap-3">
+                            <button onClick={() => setView('dashboard')} className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 font-semibold text-xs">Cancel</button>
+                             <button onClick={handleSave} className="px-5 py-2 rounded-lg font-semibold shadow-lg hover:opacity-95 text-xs" style={{ background: ACCENT, color: BG }}>Save Scheme</button>
+                         </div>
+                     </Section>
+                 </main>
+            );
         }
 
-        // --- Main App Component ---
-        function StravagariDashboard() {
-            const glow = useRef(null);
-            const [kpi, setKpi] = useState({ cpa: 60, roas: 6, aov: 250 });
-            const [winners, setWinners] = useState([]);
-            const [ads, setAds] = useState([
-                { id: 1, name: "Office Elegance", spend: 0, purchases: 0, budget: 100 }, 
-                { id: 2, name: "Street Comfort", spend: 0, purchases: 0, budget: 100 },
-                { id: 3, name: "Mall Lifestyle", spend: 0, purchases: 0, budget: 100 }, 
-                { id: 4, name: "Smart Casual", spend: 0, purchases: 0, budget: 100 },
-            ]);
-            const [sets, setSets] = useState([
-                { id: 1, name: "Boots (DABA)", spend: 0, purchases: 0, budget: 70 },
-                { id: 2, name: "Loafers (DABA)", spend: 0, purchases: 0, budget: 70 },
-            ]);
+        function Dashboard({ userEmail, initialData, onUpdate, onLogout }) {
+            const [kpi, setKpi] = useState(initialData.kpi);
+            const [winners, setWinners] = useState(initialData.winners);
+            const [ads, setAds] = useState(initialData.ads);
+            const [sets, setSets] = useState(initialData.sets);
+            const [namingScheme, setNamingScheme] = useState(initialData.namingScheme);
             const [modalState, setModalState] = useState({ isOpen: false, title: "", content: "" });
             const [isLoading, setIsLoading] = useState(false);
-
-
+            const [view, setView] = useState('dashboard');
+            const glow = useRef(null);
+            
             useEffect(() => {
-                const onScroll = () => { if (!glow.current) return; const y = window.scrollY * 0.08; glow.current.style.transform = `translate3d(-15%, ${-10 + y}px, 0)`; };
-                window.addEventListener("scroll", onScroll);
-                return () => window.removeEventListener("scroll", onScroll);
-            }, []);
-
-            const addWinner = (w) => {
-                setWinners((prev) => {
-                    const exists = prev.some((x) => x.name === w.name);
-                    if (!exists) {
-                        alert(`"${w.name}" has been promoted to the scaling campaign!`);
-                        return [...prev, w];
-                    }
-                    alert(`"${w.name}" is already in the scaling campaign.`);
-                    return prev;
-                });
-            };
-
+                 onUpdate({ kpi, winners, ads, sets, namingScheme });
+            }, [kpi, winners, ads, sets, namingScheme]);
+            
             const jumpTo = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
             
-            const handleAIAssist = async (type, adName) => {
-                // ... same logic
-            };
-            
             const handleAnalysis = async () => {
-                // ... same logic
+                setModalState({ isOpen: true, title: "✨ AI Performance Analysis", content: "" });
+                setIsLoading(true);
+
+                const dataSummary = ads.filter(ad => ad.spend > 0).map(ad => `• Ad Set '${ad.name}': Spend ${ad.spend} RON, Purchases ${ad.purchases}`).join('\n');
+
+                if (dataSummary.length === 0) {
+                    setModalState(prev => ({...prev, content: "Please enter data in the Creative Lab section to generate an analysis."}));
+                    setIsLoading(false);
+                    return;
+                }
+
+                const prompt = `You are an expert media buyer. Analyze the following campaign data for Stravagari.ro, a women's leather footwear brand. The data is:\n${dataSummary}\n\nThe target KPIs are:\n- CPA: under ${kpi.cpa} RON\n- ROAS: over ${kpi.roas}\n- Average Order Value (AOV) is ${kpi.aov} RON.\n\nProvide a summary with 3-4 key points. Identify the top-performing ad sets (potential winners) and those that need attention (potential losers). Offer a clear strategic recommendation for the next 24-48 hours. Be concise and to the point. IMPORTANT: Format your entire response using natural language with paragraphs and bullet points. Do not use a markdown table.`;
+                
+                const result = await callGeminiApi(prompt);
+                setModalState(prev => ({ ...prev, content: result }));
+                setIsLoading(false);
             };
-            
+
             const handleExplainDecisions = async (decisions) => {
                 setModalState({ isOpen: true, title: "✨ AI Decision Explanation", content: "" });
                 setIsLoading(true);
@@ -721,33 +794,169 @@
                 setIsLoading(false);
             };
 
+            const addWinner = (w) => {
+                setWinners((prev) => {
+                    const exists = prev.some((x) => x.name === w.name);
+                    if (!exists) {
+                        alert(`"${w.name}" has been promoted to the scaling campaign!`);
+                        return [...prev, w];
+                    }
+                    alert(`"${w.name}" is already in the scaling campaign.`);
+                    return prev;
+                });
+            };
+
+            const handleAIAssist = async (type, adName) => {
+                let prompt = "";
+                let newModalTitle = "";
+                switch (type) {
+                    case 'copy':
+                        newModalTitle = `✨ Ad Copy for "${adName}"`;
+                        prompt = `You are an expert e-commerce fashion copywriter. Generate 3 short and persuasive ad copy variations (Primary Text) for a Facebook/Instagram ad for women's natural leather footwear. Brand: Stravagari.ro. Ad theme: "${adName}". Target audience: women 35-55, urban, active. Tone: Elegant, confident. Requirements: Each variation must include a hook, the main benefit (comfort, style, quality), and a call-to-action. Use relevant emojis.`;
+                        break;
+                    case 'headlines':
+                        newModalTitle = `✨ Headlines for "${adName}"`;
+                        prompt = `You are a marketing expert. Generate 5 Headline variations for a Facebook ad. The headlines must be short (max 7 words), impactful, and attention-grabbing. The theme is '${adName}' for the brand Stravagari.ro (leather footwear).`;
+                        break;
+                    case 'visuals':
+                        newModalTitle = `✨ Visual Ideas for "${adName}"`;
+                        prompt = `You are a creative director. Propose 3 visual concepts (photo/video) for an Instagram ad for Stravagari.ro (women's leather footwear). Theme: "${adName}". For each concept, describe: 1. The scenario, 2. The atmosphere, 3. The setting.`;
+                        break;
+                }
+                setModalState({ isOpen: true, title: newModalTitle, content: "" });
+                setIsLoading(true);
+                const result = await callGeminiApi(prompt);
+                setModalState(prev => ({ ...prev, content: result }));
+                setIsLoading(false);
+            };
+            
+            if (view === 'settings') {
+                return (
+                     <div className="min-h-screen text-white">
+                        <TopNav onJump={jumpTo} onLogout={onLogout} userEmail={userEmail} setView={setView} />
+                        <SettingsPage namingScheme={namingScheme} setNamingScheme={setNamingScheme} setView={setView}/>
+                    </div>
+                );
+            }
+
             return (
                 <div className="min-h-screen text-white">
                     <div className="fixed inset-0 pointer-events-none -z-10" aria-hidden><div ref={glow} className="absolute -top-24 -left-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-40" style={{ background: "radial-gradient(40% 40% at 50% 50%, rgba(255,106,61,.35), transparent)" }} /></div>
-                    <TopNav onJump={jumpTo} />
+                    <TopNav onJump={jumpTo} onLogout={onLogout} userEmail={userEmail} setView={setView} />
                     <main className="max-w-7xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-8">
                         <Overview kpi={kpi} />
                         <AIAnalysis handleAnalysis={handleAnalysis} />
                         <DecisionEngine ads={ads} sets={sets} kpi={kpi} setAds={setAds} setSets={setSets} handleExplainDecisions={handleExplainDecisions} />
                         <Structure />
                         <CreativeLab kpi={kpi} addWinner={addWinner} ads={ads} setAds={setAds} handleAIAssist={handleAIAssist} />
-                        <DabaSets sets={sets} setSets={setSets} kpi={kpi} />
+                        <DabaSets sets={sets} setSets={setSets} kpi={kpi} handleAIAssist={handleAIAssist} />
                         <ASCScale winners={winners} />
                         <Timeline />
                         <KpiRules kpi={kpi} setKpi={setKpi} />
-                        <div className="py-6 text-center text-xs text-white/60">© {new Date().getFullYear()} ROASIN • Stravagari Launch Framework v3.10</div>
+                        <div className="py-6 text-center text-xs text-white/60">© {new Date().getFullYear()} ROASIN • Stravagari Launch Framework v3.14</div>
                     </main>
-                    <Modal 
-                        isOpen={modalState.isOpen} 
-                        onClose={() => setModalState({ isOpen: false, title: "", content: "" })} 
-                        title={modalState.title}>
+                    <Modal isOpen={modalState.isOpen} onClose={() => setModalState({ isOpen: false, title: "", content: "" })} title={modalState.title}>
                         {isLoading ? "Gemini is working..." : modalState.content}
                     </Modal>
                 </div>
             );
         }
 
-        ReactDOM.render(<StravagariDashboard />, document.getElementById('root'));
+        // --- Main App Component ---
+        function App() {
+            const [usersData, setUsersData] = useState(null);
+            const [currentUser, setCurrentUser] = useState(null);
+
+            const getDefaultUserData = () => ({
+                kpi: { cpa: 60, roas: 6, aov: 250 },
+                winners: [],
+                ads: [
+                    { id: 1, name: "TEST | Office Elegance", spend: 0, purchases: 0, budget: 100 },
+                    { id: 2, name: "TEST | Street Comfort", spend: 0, purchases: 0, budget: 100 },
+                ],
+                sets: [
+                    { id: 1, name: "PROD | Boots (DABA)", spend: 0, purchases: 0, budget: 70 },
+                    { id: 2, name: "RET | Loafers (DABA)", spend: 0, purchases: 0, budget: 70 },
+                ],
+                namingScheme: {
+                    test: "TEST",
+                    prod: "PROD",
+                    ret: "RET"
+                }
+            });
+
+            useEffect(() => {
+                const storedData = localStorage.getItem('roasin_saas_data');
+                setUsersData(storedData ? JSON.parse(storedData) : {});
+                
+                const loggedInUser = localStorage.getItem('roasin_current_user');
+                if (loggedInUser) {
+                    setCurrentUser(loggedInUser);
+                }
+            }, []);
+
+            const handleLogin = (email, password, setError) => {
+                if (usersData[email] && usersData[email].password === password) {
+                    setCurrentUser(email);
+                    localStorage.setItem('roasin_current_user', email);
+                } else {
+                    setError('Invalid email or password.');
+                }
+            };
+
+            const handleSignup = (email, password, setError) => {
+                if (usersData[email]) {
+                    setError('An account with this email already exists.');
+                } else {
+                    const newUserData = {
+                        password: password,
+                        ...getDefaultUserData()
+                    };
+                    const updatedUsersData = { ...usersData, [email]: newUserData };
+                    setUsersData(updatedUsersData);
+                    localStorage.setItem('roasin_saas_data', JSON.stringify(updatedUsersData));
+                    
+                    setCurrentUser(email);
+                    localStorage.setItem('roasin_current_user', email);
+                }
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                localStorage.removeItem('roasin_current_user');
+            };
+
+            const updateCurrentUserData = useCallback((newData) => {
+                if (!currentUser) return;
+
+                const updatedData = {
+                    ...usersData,
+                    [currentUser]: {
+                        ...usersData[currentUser],
+                        ...newData,
+                    },
+                };
+                setUsersData(updatedData);
+                localStorage.setItem('roasin_saas_data', JSON.stringify(updatedData));
+            }, [currentUser, usersData]);
+
+            if (usersData === null) {
+                return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+            }
+            
+            if (!currentUser) {
+                return <AuthScreen onLogin={handleLogin} onSignup={handleSignup} />;
+            }
+            
+            return <Dashboard 
+                userEmail={currentUser}
+                initialData={usersData[currentUser]}
+                onUpdate={updateCurrentUserData}
+                onLogout={handleLogout}
+            />;
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>
